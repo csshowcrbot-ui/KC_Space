@@ -1,0 +1,61 @@
+---
+title: "如何透過漸進式重構降低技術債務"
+slug: "progressive-refactoring-guide"
+publishedAt: "2026-03-15T10:00:00Z"
+updatedAt: "2026-03-18T14:20:00Z"
+excerpt: "大型單體架構遷移並非一蹴可幾，本文探討如何透過 Strangler Fig 模式平滑過渡，兼顧業務迭代與系統穩定性。"
+coverImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80"
+category: "Engineering"
+tags: ["Refactoring", "Architecture", "TypeScript", "Next.js"]
+featured: true
+status: "published"
+readingTime: "8 min"
+---
+
+在現代快速迭代的軟體工程中，技術債務（Technical Debt）就像金融利息一樣，如果不進行有序的管理與償還，最終會導致團隊交付速度急劇下降，甚至使系統陷入難以維護的泥淖。
+
+許多團隊在面對陳舊程式碼時，直覺會想要「推倒重來」（Big Bang Rewrite）。然而歷史告訴我們，一次性的重寫往往伴隨著巨大的商業風險、功能漏失與無法如期上線的困境。
+
+## 1. 什麼是絞殺者模式 (Strangler Fig Pattern)？
+
+絞殺者模式源於馬丁·福勒（Martin Fowler）在澳洲雨林中對絞殺榕的觀察。這種植物在老樹枝幹上發芽，逐步向下生根包圍宿主，最終取而代之。
+
+在系統架構中，這意味著：
+
+> **核心思維**：不要試圖一口氣重寫整個系統。而是在邊緣逐步攔截流量，將特定功能抽取為新的微服務或現代化模組，直到老舊系統完全被邊緣化並自然下線。
+
+```typescript
+// 路由閘道端範例：透過特徵旗標與路徑逐步代理流量
+export async function proxyHandler(req: Request) {
+  const url = new URL(req.url);
+  const useNewOrderService = await checkFeatureFlag("checkout_v2", req);
+
+  if (url.pathname.startsWith("/api/checkout") && useNewOrderService) {
+    // 轉發至現代化 Next.js Edge 服務
+    return fetch(process.env.NEW_SERVICE_URL + url.pathname, {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+    });
+  }
+
+  // 預設仍保留給舊版單體系統處理
+  return fetch(process.env.LEGACY_BACKEND_URL + url.pathname, {
+    method: req.method,
+    headers: req.headers,
+    body: req.body,
+  });
+}
+```
+
+## 2. 漸進式重構的四部曲
+
+1. **建立邊界與防腐層 (Anti-Corruption Layer)**：確保新寫的業務邏輯不會被舊資料庫結構污染，使用 DTO (Data Transfer Object) 進行清晰轉換。
+2. **導入全域端對端整合測試 (E2E Tests)**：在不動既有行為的前提下記錄輸入與輸出基準，作為重構的安全防護網。
+3. **金絲雀發布 (Canary Release)**：先引導 5% 的內部或低風險用戶流量至新端點，觀察監控指標 (APM) 與錯誤日誌。
+4. **清理遺留代碼與下線**：切記在流量 100% 轉移並穩定運行兩週後，徹底移除老舊程式碼，避免成為幽靈依賴。
+
+## 3. 效益與反思
+
+重構從來不是技術狂熱者的自嗨，而是為了讓團隊跑得更快、系統更具韌性。透過這套漸進策略，我們成功在半年內將百萬日活的電商平台逐步遷移至邊緣運算節點，LCP 首屏速度提升 45%，同時保持了每週三次正常上線的業務節奏。
+

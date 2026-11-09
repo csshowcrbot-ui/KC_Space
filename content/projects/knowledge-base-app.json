@@ -1,0 +1,18 @@
+{
+  "id": "knowledge-base-app",
+  "title": "跨平台個人第二大腦與知識庫 App",
+  "description": "打造結合本機優先 (Local-first) 與端對端加密同步的個人筆記工具，支援雙向連結與離線全文檢索。",
+  "period": "2025.01 - 2025.05",
+  "role": "Product Creator & Fullstack Dev",
+  "featured": true,
+  "coverImage": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
+  "metrics": [
+    { "label": "活躍用戶成長", "value": "+120%" },
+    { "label": "本機檢索速度", "value": "< 15ms" },
+    { "label": "用戶留存率", "value": "68%" }
+  ],
+  "technologies": ["React", "TypeScript", "IndexedDB", "WebAssembly", "Framer Motion"],
+  "externalUrl": "https://example.com/knowledge-app",
+  "githubUrl": "https://github.com/example/knowledge-base-app"
+}
+

@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 淺色模式色彩變數 (依據 ui_ux.md 規格) */
+  --background: #FBFBFB;
+  --surface: #FFFFFF;
+  --foreground: #1A1D20;
+  --muted: #F0F4F8;
+  --muted-foreground: #68707B;
+  --border: #EAECEF;
+  --accent: #2B59C3;
+  --accent-hover: #1e44a0;
+  --accent-foreground: #FFFFFF;
+  --badge-bg: #F0F4F8;
+  --badge-text: #2B59C3;
+}
+
+.dark {
+  /* 深色模式色彩變數 (依據 ui_ux.md 規格) */
+  --background: #0F1115;
+  --surface: #181B20;
+  --foreground: #F0F2F5;
+  --muted: #202734;
+  --muted-foreground: #94A1B2;
+  --border: #262B33;
+  --accent: #4D7DF2;
+  --accent-hover: #6792ff;
+  --accent-foreground: #FFFFFF;
+  --badge-bg: #202734;
+  --badge-text: #6792ff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 長篇閱讀文字最適行距與寬度 */
+.prose-custom {
+  max-width: 700px;
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+.prose-custom h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+  scroll-margin-top: 5rem;
+}
+
+.prose-custom h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+  scroll-margin-top: 5rem;
+}
+
+.prose-custom p {
+  margin-bottom: 1.25rem;
+}
+
+.prose-custom blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: var(--muted-foreground);
+  background-color: var(--surface);
+  padding: 0.8rem 1.2rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.prose-custom pre {
+  background-color: #16181D;
+  color: #E2E8F0;
+  padding: 1.2rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+}
+
+.prose-custom code:not(pre code) {
+  background-color: var(--badge-bg);
+  color: var(--accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.prose-custom ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.prose-custom ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.prose-custom li {
+  margin-bottom: 0.4rem;
+}
+
+/* 隱藏原生滾動條但保持滾動功能 (適用標籤列與微動態) */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
