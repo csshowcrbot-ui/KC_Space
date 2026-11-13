@@ -6,6 +6,7 @@ import * as schema from "./schema";
 import type {
   ArticleItem,
   ProjectItem,
+  FeedItem,
   EngagementItem,
   SubscriberItem,
   ExperienceItem,
@@ -36,6 +37,7 @@ const LOCAL_STORE_PATH = path.join(process.cwd(), "data", "local-store.json");
 interface LocalStoreData {
   articles: ArticleItem[];
   projects: ProjectItem[];
+  feeds: FeedItem[];
   engagements: Record<string, EngagementItem>;
   subscribers: SubscriberItem[];
   experiences: ExperienceItem[];
@@ -241,6 +243,38 @@ export async function proxyHandler(req: Request) {
       subscribedAt: new Date().toISOString(),
     },
   ],
+  feeds: [
+    {
+      id: "f-1",
+      content: "好設計是盡可能無設計（Less, but better）。在構建個人數位花園的過程中，克制的使用色彩與動畫，能讓文字與思想真正成為焦點。",
+      mediaUrl: null,
+      tags: ["#設計隨筆", "#架構思考"],
+      isPinned: true,
+      likeCount: 24,
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    },
+    {
+      id: "f-2",
+      content: "剛完成了 Next.js 14 App Router 與邊緣 ISR 的架構評估，對於個人品牌的靜態長文與即時微動態雙軌模型非常合適，效能指標 LCP 穩定在 0.8s 左右！",
+      mediaUrl: null,
+      tags: ["#前端工程", "#Nextjs"],
+      isPinned: false,
+      likeCount: 16,
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    },
+    {
+      id: "f-3",
+      content: "靈感往往不是等待出來的，而是透過頻繁地將半成品推向世界磨練出來。持續輸出是最佳的思考沉澱方式。",
+      mediaUrl: null,
+      tags: ["#思考碎片"],
+      isPinned: false,
+      likeCount: 42,
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    },
+  ],
 };
 
 function readLocalStore(): LocalStoreData {
@@ -258,6 +292,7 @@ function readLocalStore(): LocalStoreData {
       ...data,
       articles: data.articles || defaultInitialData.articles,
       projects: data.projects || defaultInitialData.projects,
+      feeds: data.feeds || defaultInitialData.feeds,
       profile: {
         ...defaultInitialData.profile,
         ...(data.profile || {}),
@@ -408,7 +443,57 @@ export const dataService = {
     return false;
   },
 
-  // ================= 3. 互動數據 (Engagements) =================
+  // ================= 3. 微動態 (Feeds) =================
+  async getFeeds(limit: number = 20): Promise<FeedItem[]> {
+    const store = readLocalStore();
+    return store.feeds
+      .slice()
+      .sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
+      .slice(0, limit);
+  },
+
+  async createFeed(input: { content: string; mediaUrl?: string | null; tags?: string[] }): Promise<FeedItem> {
+    const store = readLocalStore();
+    const newFeed: FeedItem = {
+      id: "feed-" + Math.random().toString(36).substring(2, 9),
+      content: input.content,
+      mediaUrl: input.mediaUrl || null,
+      tags: input.tags || [],
+      isPinned: false,
+      likeCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    store.feeds.unshift(newFeed);
+    writeLocalStore(store);
+    return newFeed;
+  },
+
+  async likeFeed(feedId: string): Promise<FeedItem | null> {
+    const store = readLocalStore();
+    const target = store.feeds.find((f) => f.id === feedId);
+    if (!target) return null;
+    target.likeCount += 1;
+    target.updatedAt = new Date().toISOString();
+    writeLocalStore(store);
+    return target;
+  },
+
+  async deleteFeed(id: string): Promise<boolean> {
+    const store = readLocalStore();
+    const initialLen = store.feeds.length;
+    store.feeds = store.feeds.filter((f) => f.id !== id);
+    if (store.feeds.length !== initialLen) {
+      writeLocalStore(store);
+      return true;
+    }
+    return false;
+  },
+
+  // ================= 4. 互動數據 (Engagements) =================
   async getEngagement(slug: string): Promise<EngagementItem> {
     const store = readLocalStore();
     if (!store.engagements[slug]) {
@@ -535,6 +620,7 @@ export const dataService = {
       totalArticles: store.articles.length,
       publishedArticles: store.articles.filter((a) => a.status === "published").length,
       totalProjects: store.projects.length,
+      totalFeeds: store.feeds.length,
       totalSubscribers: store.subscribers.length,
       totalViews,
       totalClaps,

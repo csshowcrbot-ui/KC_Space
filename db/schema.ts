@@ -34,7 +34,19 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// 3. 頁面統計與按讚計數 (Engagements)
+// 3. 微動態/短篇靈感 (Feed / Snippets)
+export const feeds = pgTable("feeds", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"),
+  tags: text("tags").array(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  likeCount: integer("like_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 4. 頁面統計與按讚計數 (Engagements)
 export const engagements = pgTable("engagements", {
   slug: text("slug").primaryKey(), // 可對應 article slug 或 project id
   views: integer("views").default(0).notNull(),
@@ -109,6 +121,17 @@ export type ProjectItem = {
   technologies: string[];
   externalUrl?: string | null;
   githubUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FeedItem = {
+  id: string;
+  content: string;
+  mediaUrl?: string | null;
+  tags?: string[] | null;
+  isPinned: boolean;
+  likeCount: number;
   createdAt: string;
   updatedAt: string;
 };
