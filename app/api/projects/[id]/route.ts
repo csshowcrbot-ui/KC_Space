@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataService } from "@/db";
+import { isAdminRequestAuthorized } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -21,6 +22,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!isAdminRequestAuthorized(request)) {
+      return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
+    }
     const body = await request.json();
     const saved = await dataService.saveProject({
       ...body,
@@ -37,6 +41,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!isAdminRequestAuthorized(request)) {
+      return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
+    }
     const success = await dataService.deleteProject(params.id);
     if (!success) {
       return NextResponse.json({ error: "找不到該專案以供刪除" }, { status: 404 });

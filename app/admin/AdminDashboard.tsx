@@ -224,6 +224,8 @@ export function AdminDashboard() {
   const [profile, setProfile] = useState<SiteProfileItem | null>(null);
   const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // 編輯狀態
@@ -232,13 +234,25 @@ export function AdminDashboard() {
   const [editingAiTool, setEditingAiTool] = useState<Partial<AiToolItem> | null>(null);
   const [editingExp, setEditingExp] = useState<Partial<ExperienceItem> | null>(null);
 
-  // 檢查登入
+  // 檢查登入並向後端確認環境變數密鑰是否有效
   useEffect(() => {
     const savedKey = localStorage.getItem("kc_admin_key");
-    if (savedKey) {
-      setAdminKey(savedKey);
-      setIsAuthenticated(true);
-    }
+    if (!savedKey) return;
+
+    fetch("/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: savedKey }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          setAdminKey(savedKey);
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem("kc_admin_key");
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // 載入資料
@@ -278,12 +292,33 @@ export function AdminDashboard() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginInput.trim()) {
-      localStorage.setItem("kc_admin_key", loginInput.trim());
-      setAdminKey(loginInput.trim());
-      setIsAuthenticated(true);
+    const trimmed = loginInput.trim();
+    if (!trimmed) return;
+
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: trimmed }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.authenticated) {
+        localStorage.setItem("kc_admin_key", trimmed);
+        setAdminKey(trimmed);
+        setIsAuthenticated(true);
+        setLoginInput("");
+      } else {
+        setAuthError(data.error || "驗證失敗，請確認安全密鑰是否正確。");
+      }
+    } catch {
+      setAuthError("網路連線異常，請稍後再試。");
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -399,7 +434,10 @@ export function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminKey}`,
+        },
         body: JSON.stringify(profile),
       });
       if (res.ok) {
@@ -424,7 +462,10 @@ export function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/experiences", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminKey}`,
+        },
         body: JSON.stringify(editingExp),
       });
       if (res.ok) {
@@ -442,6 +483,7 @@ export function AdminDashboard() {
     try {
       const res = await fetch(`/api/admin/experiences?id=${id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${adminKey}` },
       });
       if (res.ok) {
         showToast("經歷已刪除");
@@ -473,23 +515,27 @@ export function AdminDashboard() {
             </label>
             <input
               type="password"
-              placeholder="預設密鑰：kc-space-admin-key"
+              placeholder="請輸入管理員安全密鑰..."
               value={loginInput}
               onChange={(e) => setLoginInput(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               required
             />
           </div>
+          {authError && (
+            <p className="text-xs text-rose-500 font-medium">{authError}</p>
+          )}
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent-hover transition-colors shadow-sm"
+            disabled={authLoading}
+            className="w-full py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50"
           >
-            驗證並進入後台
+            {authLoading ? "驗證中..." : "驗證並進入後台"}
           </button>
         </form>
 
         <div className="p-3 rounded-lg bg-badge-bg border border-border/60 text-[11px] text-muted-foreground leading-relaxed">
-          💡 <strong>開發測試提示</strong>：系統預設密鑰為 <code className="text-accent font-mono">kc-space-admin-key</code>。
+          請輸入環境變數 <code className="text-accent font-mono">ADMIN_SECRET_KEY</code> 所設定之管理員安全密鑰。
         </div>
       </div>
     );

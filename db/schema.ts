@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, uuid, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 
 // 1. 文章資料表 (Articles)
-export const articles = pgTable("articles", {
+export const articles = pgTable("kc_articles", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: text("slug").unique().notNull(),
   title: text("title").notNull(),
@@ -18,7 +18,7 @@ export const articles = pgTable("articles", {
 });
 
 // 2. 專案成果資料表 (Projects)
-export const projects = pgTable("projects", {
+export const projects = pgTable("kc_projects", {
   id: text("id").primaryKey(), // 專案唯一標識符 (如 e-commerce-replatform)
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -35,7 +35,7 @@ export const projects = pgTable("projects", {
 });
 
 // 3. 微動態/短篇靈感 (Feed / Snippets)
-export const feeds = pgTable("feeds", {
+export const feeds = pgTable("kc_feeds", {
   id: uuid("id").defaultRandom().primaryKey(),
   content: text("content").notNull(),
   mediaUrl: text("media_url"),
@@ -47,7 +47,7 @@ export const feeds = pgTable("feeds", {
 });
 
 // 4. 頁面統計與按讚計數 (Engagements)
-export const engagements = pgTable("engagements", {
+export const engagements = pgTable("kc_engagements", {
   slug: text("slug").primaryKey(), // 可對應 article slug 或 project id
   views: integer("views").default(0).notNull(),
   claps: integer("claps").default(0).notNull(),
@@ -55,7 +55,7 @@ export const engagements = pgTable("engagements", {
 });
 
 // 5. 電子報訂閱名單 (Newsletter Subscribers)
-export const subscribers = pgTable("subscribers", {
+export const subscribers = pgTable("kc_subscribers", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").unique().notNull(),
   status: text("status").default("active").notNull(), // pending | active | unsubscribed
@@ -63,7 +63,7 @@ export const subscribers = pgTable("subscribers", {
 });
 
 // 6. 個人經歷與檔案資料表 (Experiences & Profiles)
-export const experiences = pgTable("experiences", {
+export const experiences = pgTable("kc_experiences", {
   id: uuid("id").defaultRandom().primaryKey(),
   role: text("role").notNull(),
   company: text("company").notNull(),
@@ -72,7 +72,7 @@ export const experiences = pgTable("experiences", {
   order: integer("order").default(0).notNull(),
 });
 
-export const siteProfiles = pgTable("site_profiles", {
+export const siteProfiles = pgTable("kc_site_profiles", {
   id: text("id").primaryKey(), // 'main'
   name: text("name").notNull(),
   title: text("title").notNull(),
@@ -86,7 +86,7 @@ export const siteProfiles = pgTable("site_profiles", {
 });
 
 // 7. AI 工具收集資料表 (AI Tools)
-export const aiTools = pgTable("ai_tools", {
+export const aiTools = pgTable("kc_ai_tools", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),

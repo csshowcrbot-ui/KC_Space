@@ -39,7 +39,7 @@ npm install
 cp .env.example .env.local
 ```
 
-> **後台預設密鑰**：`ADMIN_SECRET_KEY="kc-space-admin-key"`
+> **後台安全密鑰**：請於 `.env.local` 或部署平台環境變數中自行設定 `ADMIN_SECRET_KEY`。
 
 ### 3. 本地啟動開發伺服器
 
