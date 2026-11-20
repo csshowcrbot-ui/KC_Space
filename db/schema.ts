@@ -85,6 +85,20 @@ export const siteProfiles = pgTable("site_profiles", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// 7. AI 工具收集資料表 (AI Tools)
+export const aiTools = pgTable("ai_tools", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").default("對話與寫作").notNull(),
+  pricing: text("pricing").default("Freemium").notNull(),
+  url: text("url").notNull(),
+  tags: text("tags").array().notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // TypeScript 型別導出
 export type ArticleItem = {
   id: string;
@@ -169,5 +183,18 @@ export type SiteProfileItem = {
   avatarUrl?: string | null;
   nowStatus: string;
   nowUpdateSeason: string;
+  updatedAt: string;
+};
+
+export type AiToolItem = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  pricing: string;
+  url: string;
+  tags: string[];
+  isFeatured: boolean;
+  createdAt: string;
   updatedAt: string;
 };

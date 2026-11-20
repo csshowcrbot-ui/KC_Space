@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/", label: "首頁" },
   { href: "/writings", label: "深度文章" },
   { href: "/projects", label: "專案成果" },
+  { href: "/ai-tools", label: "AI 工具" },
   { href: "/about", label: "關於我" },
 ];
 

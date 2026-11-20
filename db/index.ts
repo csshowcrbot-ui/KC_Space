@@ -11,6 +11,7 @@ import type {
   SubscriberItem,
   ExperienceItem,
   SiteProfileItem,
+  AiToolItem,
 } from "./schema";
 
 // 判斷是否有設定 Postgres 資料庫連線
@@ -42,6 +43,7 @@ interface LocalStoreData {
   subscribers: SubscriberItem[];
   experiences: ExperienceItem[];
   profile: SiteProfileItem;
+  aiTools: AiToolItem[];
 }
 
 const defaultInitialData: LocalStoreData = {
@@ -275,6 +277,80 @@ export async function proxyHandler(req: Request) {
       updatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     },
   ],
+  aiTools: [
+    {
+      id: "tool-claude",
+      name: "Claude (Anthropic)",
+      description: "擅長深度推理、長文本脈絡理解與高品質程式碼撰寫的 AI 對話夥伴，寫作語氣自然且邏輯嚴謹。",
+      category: "對話與寫作",
+      pricing: "Freemium / 訂閱制",
+      url: "https://claude.ai",
+      tags: ["LLM", "寫作", "推理", "Artifacts"],
+      isFeatured: true,
+      createdAt: new Date("2026-01-10").toISOString(),
+      updatedAt: new Date("2026-01-10").toISOString(),
+    },
+    {
+      id: "tool-cursor",
+      name: "Cursor",
+      description: "基於 VS Code 打造的 AI 原生程式編輯器，支援全專案上下文索引、Composer 多檔重構與極速補全。",
+      category: "程式開發",
+      pricing: "Freemium / 訂閱制",
+      url: "https://www.cursor.com",
+      tags: ["IDE", "Coding", "Agent"],
+      isFeatured: true,
+      createdAt: new Date("2026-01-12").toISOString(),
+      updatedAt: new Date("2026-01-12").toISOString(),
+    },
+    {
+      id: "tool-perplexity",
+      name: "Perplexity AI",
+      description: "結合即時網路搜尋與來源引用的 AI 知識檢索引擎，大幅縮短技術調研與資料查證的時間成本。",
+      category: "搜尋與研究",
+      pricing: "Freemium / 訂閱制",
+      url: "https://www.perplexity.ai",
+      tags: ["Search", "Research", "Citations"],
+      isFeatured: true,
+      createdAt: new Date("2026-01-15").toISOString(),
+      updatedAt: new Date("2026-01-15").toISOString(),
+    },
+    {
+      id: "tool-v0",
+      name: "v0 by Vercel",
+      description: "透過自然語言提示快速生成 React + Tailwind CSS + shadcn/ui 高質感介面元件，前端原型設計利器。",
+      category: "圖像與設計",
+      pricing: "Freemium / 訂閱制",
+      url: "https://v0.dev",
+      tags: ["UI", "React", "Tailwind"],
+      isFeatured: false,
+      createdAt: new Date("2026-01-18").toISOString(),
+      updatedAt: new Date("2026-01-18").toISOString(),
+    },
+    {
+      id: "tool-notebooklm",
+      name: "NotebookLM",
+      description: "Google 推出的 AI 個人筆記與研究助理，可上傳大量 PDF 與文獻進行精準問答及生成語音摘要。",
+      category: "搜尋與研究",
+      pricing: "免費",
+      url: "https://notebooklm.google.com",
+      tags: ["Knowledge", "PDF", "Audio"],
+      isFeatured: true,
+      createdAt: new Date("2026-01-20").toISOString(),
+      updatedAt: new Date("2026-01-20").toISOString(),
+    },
+    {
+      id: "tool-n8n",
+      name: "n8n",
+      description: "支援開源自託管的視覺化工作流自動化平台，內建豐富 AI Agent 節點，輕鬆串接各類 API 與資料庫。",
+      category: "效率自動化",
+      pricing: "開源免費 / 雲端版",
+      url: "https://n8n.io",
+      tags: ["Workflow", "Automation", "Open Source"],
+      isFeatured: false,
+      createdAt: new Date("2026-01-22").toISOString(),
+      updatedAt: new Date("2026-01-22").toISOString(),
+    },
+  ],
 };
 
 function readLocalStore(): LocalStoreData {
@@ -293,6 +369,7 @@ function readLocalStore(): LocalStoreData {
       articles: data.articles || defaultInitialData.articles,
       projects: data.projects || defaultInitialData.projects,
       feeds: data.feeds || defaultInitialData.feeds,
+      aiTools: data.aiTools || defaultInitialData.aiTools,
       profile: {
         ...defaultInitialData.profile,
         ...(data.profile || {}),
@@ -621,9 +698,62 @@ export const dataService = {
       publishedArticles: store.articles.filter((a) => a.status === "published").length,
       totalProjects: store.projects.length,
       totalFeeds: store.feeds.length,
+      totalAiTools: store.aiTools.length,
       totalSubscribers: store.subscribers.length,
       totalViews,
       totalClaps,
     };
+  },
+
+  // ================= 8. AI 工具收集 (AI Tools) =================
+  async getAiTools(): Promise<AiToolItem[]> {
+    const store = readLocalStore();
+    return store.aiTools.slice().sort((a, b) => {
+      if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  },
+
+  async saveAiTool(input: Partial<AiToolItem> & { id: string; name: string; url: string }): Promise<AiToolItem> {
+    const store = readLocalStore();
+    const existingIndex = store.aiTools.findIndex((t) => t.id === input.id);
+    const now = new Date().toISOString();
+
+    let saved: AiToolItem;
+    if (existingIndex >= 0) {
+      saved = {
+        ...store.aiTools[existingIndex],
+        ...input,
+        updatedAt: now,
+      };
+      store.aiTools[existingIndex] = saved;
+    } else {
+      saved = {
+        id: input.id,
+        name: input.name,
+        description: input.description || "",
+        category: input.category || "對話與寫作",
+        pricing: input.pricing || "Freemium",
+        url: input.url,
+        tags: input.tags || [],
+        isFeatured: Boolean(input.isFeatured),
+        createdAt: input.createdAt || now,
+        updatedAt: now,
+      };
+      store.aiTools.unshift(saved);
+    }
+    writeLocalStore(store);
+    return saved;
+  },
+
+  async deleteAiTool(id: string): Promise<boolean> {
+    const store = readLocalStore();
+    const initialLen = store.aiTools.length;
+    store.aiTools = store.aiTools.filter((t) => t.id !== id);
+    if (store.aiTools.length !== initialLen) {
+      writeLocalStore(store);
+      return true;
+    }
+    return false;
   },
 };
