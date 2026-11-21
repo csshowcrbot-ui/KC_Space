@@ -1067,17 +1067,19 @@ export const dataService = {
     if (db) {
       const current = await this.getProfile();
       const updateFields = {
-        name: input.name ?? current.name,
-        title: input.title ?? current.title,
-        bio: input.bio ?? current.bio,
-        location: input.location ?? current.location,
-        email: input.email ?? current.email,
+        name: String(input.name ?? current.name ?? ""),
+        title: String(input.title ?? current.title ?? ""),
+        bio: String(input.bio ?? current.bio ?? ""),
+        location: String(input.location ?? current.location ?? ""),
+        email: String(input.email ?? current.email ?? ""),
         avatarUrl:
           input.avatarUrl !== undefined
-            ? input.avatarUrl
+            ? input.avatarUrl || null
             : current.avatarUrl ?? null,
-        nowStatus: input.nowStatus ?? current.nowStatus,
-        nowUpdateSeason: input.nowUpdateSeason ?? current.nowUpdateSeason,
+        nowStatus: String(input.nowStatus ?? current.nowStatus ?? ""),
+        nowUpdateSeason: String(
+          input.nowUpdateSeason ?? current.nowUpdateSeason ?? ""
+        ),
         updatedAt: now,
       };
       const rows = await db

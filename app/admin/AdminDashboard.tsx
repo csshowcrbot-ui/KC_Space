@@ -458,7 +458,7 @@ export function AdminDashboard() {
         showToast("個人檔案與 /now 現況已更新！");
         loadAllData();
       } else {
-        showToast(data.error || "更新失敗", "error");
+        showToast(`[${res.status}] ${data.error || "更新失敗"}`, "error");
       }
     } catch {
       showToast("連線失敗", "error");
