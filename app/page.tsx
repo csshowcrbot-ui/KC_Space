@@ -16,7 +16,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-6 sm:space-y-10">
       {/* 1. 首頁 Hero 區塊 */}
-      <HeroSection />
+      <HeroSection profile={profile} />
 
       {/* 2. 現況速覽 (Now Status) */}
       <NowStatus statusText={profile.nowStatus} updateSeason={profile.nowUpdateSeason} />

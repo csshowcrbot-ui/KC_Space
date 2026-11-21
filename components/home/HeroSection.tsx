@@ -1,24 +1,41 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, Compass } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
+import type { SiteProfileItem } from "@/db/schema";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  profile?: SiteProfileItem | null;
+}
+
+export function HeroSection({ profile }: HeroSectionProps) {
+  const name = profile?.name?.trim();
+  const title = profile?.title?.trim();
+  const bio = profile?.bio?.trim();
+
   return (
     <section className="pt-8 pb-12 sm:pt-14 sm:pb-16">
       <div className="space-y-6">
-        {/* 身分徽章 */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-xs font-medium text-muted-foreground shadow-sm">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>全端架構師 · 產品設計師 · 獨立創作者</span>
-        </div>
+        {/* 身分徽章（由資料庫讀取） */}
+        {title && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-xs font-medium text-muted-foreground shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{title}</span>
+          </div>
+        )}
 
         {/* 標題與引言 */}
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.2] max-w-2xl">
-          打造有溫度的數位產品，在混亂與秩序間持續思考。
+          {name ? `哈囉，我是 ${name}。` : "KC Space · 數位花園"}
         </h1>
 
-        <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
-          哈囉，我是 KC。這裡是我的個人數位花園（Digital Garden），我在此記錄架構重構的實踐、產品工程的權衡，以及隨手捕捉的微小靈感。
-        </p>
+        {bio ? (
+          <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
+            {bio}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+            目前資料庫尚未設定個人簡介，請登入管理後台新增內容。
+          </p>
+        )}
 
         {/* 行動按鈕列 */}
         <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -41,4 +58,3 @@ export function HeroSection() {
     </section>
   );
 }
-

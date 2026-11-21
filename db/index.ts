@@ -38,6 +38,22 @@ if (isPostgresConfigured) {
 
 export const db = dbInstance;
 
+// 生產環境（如 Railway）嚴格模式：禁止降級讀取本地 local-store.json 假資料
+const isStrictDbMode = Boolean(db) || process.env.NODE_ENV === "production";
+
+const emptyProfile: SiteProfileItem = {
+  id: "main",
+  name: "",
+  title: "",
+  bio: "",
+  location: "",
+  email: "",
+  avatarUrl: null,
+  nowStatus: "",
+  nowUpdateSeason: "",
+  updatedAt: new Date(0).toISOString(),
+};
+
 // 驗證是否為合法 UUID 格式（避免傳入非 UUID 字串導致 Postgres 報錯）
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -301,6 +317,20 @@ const defaultInitialData: LocalStoreData = {
 };
 
 function readLocalStore(): LocalStoreData {
+  // 生產環境禁止讀取本地假資料檔案
+  if (isStrictDbMode) {
+    return {
+      articles: [],
+      projects: [],
+      feeds: [],
+      engagements: {},
+      subscribers: [],
+      experiences: [],
+      profile: emptyProfile,
+      aiTools: [],
+      systemSettings: {},
+    };
+  }
   try {
     if (!fs.existsSync(LOCAL_STORE_PATH)) {
       const dir = path.dirname(LOCAL_STORE_PATH);
@@ -1019,7 +1049,7 @@ export const dataService = {
           updatedAt: r.updatedAt.toISOString(),
         };
       }
-      return defaultInitialData.profile;
+      return emptyProfile;
     }
 
     const store = readLocalStore();
@@ -1199,6 +1229,7 @@ export const dataService = {
       const totalClaps = allEngagements.reduce((acc, c) => acc + c.claps, 0);
 
       return {
+        dbMode: "postgresql" as const,
         totalArticles: allArticles.length,
         publishedArticles: allArticles.filter((a) => a.status === "published")
           .length,
@@ -1222,6 +1253,7 @@ export const dataService = {
     );
 
     return {
+      dbMode: isStrictDbMode ? ("unconfigured" as const) : ("local-file" as const),
       totalArticles: store.articles.length,
       publishedArticles: store.articles.filter((a) => a.status === "published")
         .length,

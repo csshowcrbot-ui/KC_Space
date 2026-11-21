@@ -1,14 +1,15 @@
-import { Activity, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface NowStatusProps {
   statusText?: string;
   updateSeason?: string;
 }
 
-export function NowStatus({
-  statusText = "正在深耕 Next.js 14 邊緣渲染架構、探索 Local-first 知識系統與實踐數位花園經營",
-  updateSeason = "2026 年春季更新",
-}: NowStatusProps) {
+export function NowStatus({ statusText, updateSeason }: NowStatusProps) {
+  if (!statusText?.trim()) {
+    return null;
+  }
+
   return (
     <div className="my-6 p-4 rounded-xl border border-border bg-surface/70 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
       <div className="flex items-center gap-3">
@@ -21,10 +22,12 @@ export function NowStatus({
           <span className="text-muted-foreground">{statusText}</span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end sm:self-auto flex-shrink-0">
-        <Clock className="w-3.5 h-3.5" />
-        <span>{updateSeason}</span>
-      </div>
+      {updateSeason?.trim() && (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end sm:self-auto flex-shrink-0">
+          <Clock className="w-3.5 h-3.5" />
+          <span>{updateSeason}</span>
+        </div>
+      )}
     </div>
   );
 }
