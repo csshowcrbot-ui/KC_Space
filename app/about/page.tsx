@@ -51,13 +51,11 @@ export default async function AboutPage() {
               {profile.title}
             </div>
 
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-1">
-              一名專注於高併發 Web 架構演進、極致使用者體驗與個人知識管理的資深全端工程師與產品建構者。
-            </p>
-
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {profile.bio}
-            </p>
+            {profile.bio && (
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-1 whitespace-pre-line">
+                {profile.bio}
+              </p>
+            )}
 
             {/* 社交連結 */}
             <div className="flex items-center justify-center md:justify-start gap-3 pt-3">
@@ -105,12 +103,11 @@ export default async function AboutPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80" />
               
               {/* 照片角落上的在線狀態 */}
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3 py-1.5 rounded-xl bg-background/85 backdrop-blur-md border border-border/80 text-[11px] font-semibold text-foreground shadow-sm">
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-center px-3 py-1.5 rounded-xl bg-background/85 backdrop-blur-md border border-border/80 text-[11px] font-semibold text-foreground shadow-sm">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>開放交流諮詢</span>
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono">Taipei</span>
               </div>
             </div>
 
