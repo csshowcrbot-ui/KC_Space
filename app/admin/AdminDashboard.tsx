@@ -557,10 +557,6 @@ export function AdminDashboard() {
               : "設定密鑰並進入後台"}
           </button>
         </form>
-
-        <div className="p-3 rounded-lg bg-badge-bg border border-border/60 text-[11px] text-muted-foreground leading-relaxed">
-          安全密鑰將以 <code className="text-accent font-mono">scrypt</code> 單向雜湊加密存放於資料庫（<code className="text-accent font-mono">kc_system_settings</code>）。
-        </div>
       </div>
     );
   }
@@ -1573,10 +1569,10 @@ export function AdminDashboard() {
             className="p-6 rounded-2xl border border-border bg-surface space-y-4"
           >
             <h3 className="text-lg font-bold text-foreground border-b border-border pb-2">
-              系統安全密鑰設定 (儲存於資料庫)
+              系統安全密鑰設定
             </h3>
             <p className="text-xs text-muted-foreground">
-              變更後將以 scrypt 雜湊形式寫入資料庫 <code className="text-accent font-mono">kc_system_settings</code>，取代環境變數設定，立即生效。
+              變更後將立即生效，請妥善保管您的管理員安全密鑰。
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
