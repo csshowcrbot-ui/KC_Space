@@ -85,7 +85,7 @@ export const siteProfiles = pgTable("kc_site_profiles", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// 7. AI 工具收集資料表 (AI Tools)
+// 8. AI 工具收集資料表 (AI Tools)
 export const aiTools = pgTable("kc_ai_tools", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -96,6 +96,14 @@ export const aiTools = pgTable("kc_ai_tools", {
   tags: text("tags").array().notNull(),
   isFeatured: boolean("is_featured").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 9. 系統設定與線上部署環境配置表 (System Settings)
+export const systemSettings = pgTable("kc_system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  description: text("description"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -196,5 +204,12 @@ export type AiToolItem = {
   tags: string[];
   isFeatured: boolean;
   createdAt: string;
+  updatedAt: string;
+};
+
+export type SystemSettingItem = {
+  key: string;
+  value: string;
+  description?: string | null;
   updatedAt: string;
 };

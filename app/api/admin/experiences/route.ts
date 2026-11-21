@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!isAdminRequestAuthorized(request)) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
     const body = await request.json();
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    if (!isAdminRequestAuthorized(request)) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
     const { searchParams } = new URL(request.url);

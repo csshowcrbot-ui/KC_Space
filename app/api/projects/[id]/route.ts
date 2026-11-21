@@ -22,7 +22,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    if (!isAdminRequestAuthorized(request)) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
     const body = await request.json();
@@ -41,7 +41,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    if (!isAdminRequestAuthorized(request)) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
     const success = await dataService.deleteProject(params.id);

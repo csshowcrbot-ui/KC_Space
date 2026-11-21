@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataService } from "@/db";
+import { isAdminRequestAuthorized } from "@/lib/auth";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const adminKey = process.env.ADMIN_SECRET_KEY;
-    if (adminKey && authHeader !== `Bearer ${adminKey}`) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
 
@@ -28,9 +27,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const adminKey = process.env.ADMIN_SECRET_KEY;
-    if (adminKey && authHeader !== `Bearer ${adminKey}`) {
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
 

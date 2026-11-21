@@ -226,6 +226,8 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isSecretConfigured, setIsSecretConfigured] = useState<boolean>(true);
+  const [newSecretInput, setNewSecretInput] = useState<string>("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // 編輯狀態
@@ -234,23 +236,29 @@ export function AdminDashboard() {
   const [editingAiTool, setEditingAiTool] = useState<Partial<AiToolItem> | null>(null);
   const [editingExp, setEditingExp] = useState<Partial<ExperienceItem> | null>(null);
 
-  // 檢查登入並向後端確認環境變數密鑰是否有效
+  // 檢查系統設定狀態與本地已存密鑰是否有效
   useEffect(() => {
-    const savedKey = localStorage.getItem("kc_admin_key");
-    if (!savedKey) return;
+    fetch("/api/admin/auth")
+      .then((r) => r.json())
+      .then((status) => {
+        setIsSecretConfigured(Boolean(status.configured));
+        if (!status.configured) return;
 
-    fetch("/api/admin/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: savedKey }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          setAdminKey(savedKey);
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem("kc_admin_key");
-        }
+        const savedKey = localStorage.getItem("kc_admin_key");
+        if (!savedKey) return;
+
+        return fetch("/api/admin/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: savedKey }),
+        }).then((res) => {
+          if (res.ok) {
+            setAdminKey(savedKey);
+            setIsAuthenticated(true);
+          } else {
+            localStorage.removeItem("kc_admin_key");
+          }
+        });
       })
       .catch(() => {});
   }, []);
@@ -303,13 +311,17 @@ export function AdminDashboard() {
       const res = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: trimmed }),
+        body: JSON.stringify({
+          action: isSecretConfigured ? "login" : "setup",
+          key: trimmed,
+        }),
       });
       const data = await res.json();
 
       if (res.ok && data.authenticated) {
         localStorage.setItem("kc_admin_key", trimmed);
         setAdminKey(trimmed);
+        setIsSecretConfigured(true);
         setIsAuthenticated(true);
         setLoginInput("");
       } else {
@@ -502,20 +514,28 @@ export function AdminDashboard() {
           <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">管理員認證</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            {isSecretConfigured ? "管理員認證" : "初次啟用：設定管理員密鑰"}
+          </h2>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            請輸入管理密鑰以維護關於我、專案成果、深度文章等全站資料庫內容。
+            {isSecretConfigured
+              ? "請輸入管理密鑰以維護關於我、專案成果、深度文章等全站資料庫內容。"
+              : "資料庫尚未設定管理員安全密鑰，請設定一組密碼（至少 6 個字元）並加密存入資料庫。"}
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1.5">
-              管理員安全密鑰 (ADMIN_SECRET_KEY)
+              {isSecretConfigured ? "管理員安全密鑰" : "設定新管理員安全密鑰"}
             </label>
             <input
               type="password"
-              placeholder="請輸入管理員安全密鑰..."
+              placeholder={
+                isSecretConfigured
+                  ? "請輸入管理員安全密鑰..."
+                  : "請輸入至少 6 個字元的安全密鑰..."
+              }
               value={loginInput}
               onChange={(e) => setLoginInput(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent transition-all"
@@ -530,12 +550,16 @@ export function AdminDashboard() {
             disabled={authLoading}
             className="w-full py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50"
           >
-            {authLoading ? "驗證中..." : "驗證並進入後台"}
+            {authLoading
+              ? "處理中..."
+              : isSecretConfigured
+              ? "驗證並進入後台"
+              : "設定密鑰並進入後台"}
           </button>
         </form>
 
         <div className="p-3 rounded-lg bg-badge-bg border border-border/60 text-[11px] text-muted-foreground leading-relaxed">
-          請輸入環境變數 <code className="text-accent font-mono">ADMIN_SECRET_KEY</code> 所設定之管理員安全密鑰。
+          安全密鑰將以 <code className="text-accent font-mono">scrypt</code> 單向雜湊加密存放於資料庫（<code className="text-accent font-mono">kc_system_settings</code>）。
         </div>
       </div>
     );
@@ -1514,6 +1538,63 @@ export function AdminDashboard() {
               ))}
             </div>
           </div>
+
+          {/* 系統安全密鑰維護（儲存至資料庫） */}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const trimmed = newSecretInput.trim();
+              if (trimmed.length < 6) {
+                showToast("新密鑰長度至少需 6 個字元", "error");
+                return;
+              }
+              try {
+                const res = await fetch("/api/admin/auth", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${adminKey}`,
+                  },
+                  body: JSON.stringify({ action: "change", newKey: trimmed }),
+                });
+                const data = await res.json();
+                if (res.ok && data.updated) {
+                  localStorage.setItem("kc_admin_key", trimmed);
+                  setAdminKey(trimmed);
+                  setNewSecretInput("");
+                  showToast("管理員安全密鑰已加密更新至資料庫！");
+                } else {
+                  showToast(data.error || "更新密鑰失敗", "error");
+                }
+              } catch {
+                showToast("連線錯誤", "error");
+              }
+            }}
+            className="p-6 rounded-2xl border border-border bg-surface space-y-4"
+          >
+            <h3 className="text-lg font-bold text-foreground border-b border-border pb-2">
+              系統安全密鑰設定 (儲存於資料庫)
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              變更後將以 scrypt 雜湊形式寫入資料庫 <code className="text-accent font-mono">kc_system_settings</code>，取代環境變數設定，立即生效。
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="password"
+                placeholder="輸入新的管理員安全密鑰 (至少 6 字元)..."
+                value={newSecretInput}
+                onChange={(e) => setNewSecretInput(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors shadow-sm"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>更新資料庫密鑰</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

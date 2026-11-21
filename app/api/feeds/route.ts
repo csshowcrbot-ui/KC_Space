@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataService } from "@/db";
+import { isAdminRequestAuthorized } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,10 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: updated });
     }
 
-    // 發布新動態 (支援管理員密鑰驗證，若未設定則允許開發測試)
-    const authHeader = request.headers.get("authorization");
-    const adminKey = process.env.ADMIN_SECRET_KEY;
-    if (adminKey && authHeader !== `Bearer ${adminKey}`) {
+    // 發布新動態 (驗證資料庫或環境變數管理員密鑰)
+    if (!(await isAdminRequestAuthorized(request))) {
       return NextResponse.json({ error: "未授權的操作" }, { status: 401 });
     }
 

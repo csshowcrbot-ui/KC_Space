@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -12,6 +13,7 @@ import type {
   ExperienceItem,
   SiteProfileItem,
   AiToolItem,
+  SystemSettingItem,
 } from "./schema";
 
 // 判斷是否有設定 Postgres 資料庫連線
@@ -44,6 +46,7 @@ interface LocalStoreData {
   experiences: ExperienceItem[];
   profile: SiteProfileItem;
   aiTools: AiToolItem[];
+  systemSettings: Record<string, SystemSettingItem>;
 }
 
 const defaultInitialData: LocalStoreData = {
@@ -351,6 +354,7 @@ export async function proxyHandler(req: Request) {
       updatedAt: new Date("2026-01-22").toISOString(),
     },
   ],
+  systemSettings: {},
 };
 
 function readLocalStore(): LocalStoreData {
@@ -370,6 +374,7 @@ function readLocalStore(): LocalStoreData {
       projects: data.projects || defaultInitialData.projects,
       feeds: data.feeds || defaultInitialData.feeds,
       aiTools: data.aiTools || defaultInitialData.aiTools,
+      systemSettings: data.systemSettings || defaultInitialData.systemSettings,
       profile: {
         ...defaultInitialData.profile,
         ...(data.profile || {}),
@@ -755,5 +760,80 @@ export const dataService = {
       return true;
     }
     return false;
+  },
+
+  // ================= 9. 系統設定與環境配置 (System Settings) =================
+  async getSystemSetting(key: string): Promise<SystemSettingItem | null> {
+    if (db) {
+      try {
+        const rows = await db
+          .select()
+          .from(schema.systemSettings)
+          .where(eq(schema.systemSettings.key, key))
+          .limit(1);
+        if (rows.length > 0) {
+          return {
+            key: rows[0].key,
+            value: rows[0].value,
+            description: rows[0].description,
+            updatedAt: rows[0].updatedAt.toISOString(),
+          };
+        }
+        return null;
+      } catch (err) {
+        console.warn("讀取 PostgreSQL 系統設定失敗，降級使用本地儲存:", err);
+      }
+    }
+
+    const store = readLocalStore();
+    return store.systemSettings?.[key] || null;
+  },
+
+  async setSystemSetting(
+    key: string,
+    value: string,
+    description?: string
+  ): Promise<SystemSettingItem> {
+    const now = new Date();
+    if (db) {
+      try {
+        await db
+          .insert(schema.systemSettings)
+          .values({
+            key,
+            value,
+            description: description || null,
+            updatedAt: now,
+          })
+          .onConflictDoUpdate({
+            target: schema.systemSettings.key,
+            set: {
+              value,
+              description: description || null,
+              updatedAt: now,
+            },
+          });
+        return {
+          key,
+          value,
+          description: description || null,
+          updatedAt: now.toISOString(),
+        };
+      } catch (err) {
+        console.warn("寫入 PostgreSQL 系統設定失敗，降級使用本地儲存:", err);
+      }
+    }
+
+    const store = readLocalStore();
+    if (!store.systemSettings) store.systemSettings = {};
+    const item: SystemSettingItem = {
+      key,
+      value,
+      description: description || null,
+      updatedAt: now.toISOString(),
+    };
+    store.systemSettings[key] = item;
+    writeLocalStore(store);
+    return item;
   },
 };
