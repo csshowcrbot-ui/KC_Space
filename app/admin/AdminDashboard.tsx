@@ -170,7 +170,7 @@ function ImageUploader({
                 點擊選擇或將圖片拖曳至此處
               </div>
               <p className="text-[11px] text-muted-foreground">
-                支援 PNG, JPG, WebP, SVG, GIF (上限 10MB)
+                支援 PNG, JPG, WebP, SVG, GIF (上限 3MB，直接儲存於資料庫)
               </p>
               <div className="pt-2">
                 <label className="px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold cursor-pointer hover:bg-accent-hover transition-colors shadow-xs inline-flex items-center gap-1.5">
