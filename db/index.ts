@@ -16,10 +16,15 @@ import type {
   SystemSettingItem,
 } from "./schema";
 
-// 判斷是否有設定 Postgres 資料庫連線
-const connectionString = process.env.DATABASE_URL;
+// 判斷是否有設定 Postgres 資料庫連線（優先讀取 DATABASE_URL，並相容 Railway 常見變數名）
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.DATABASE_PUBLIC_URL ||
+  process.env.POSTGRES_URL;
 const isPostgresConfigured = Boolean(
-  connectionString && !connectionString.includes("user:pass@db.supabase.co")
+  connectionString &&
+    !connectionString.includes("user:pass@db.supabase.co") &&
+    connectionString.startsWith("postgres")
 );
 
 let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
