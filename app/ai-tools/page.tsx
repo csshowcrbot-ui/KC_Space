@@ -6,7 +6,7 @@ export const metadata = {
   description: "精選實用的 AI 工具庫，涵蓋對話寫作、程式開發、搜尋研究、設計與效率自動化。",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function AiToolsPage() {
   const tools = await dataService.getAiTools();

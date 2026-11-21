@@ -1,5 +1,7 @@
 import { dataService } from "@/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kc-space.dev";
   const articles = await dataService.getArticles();

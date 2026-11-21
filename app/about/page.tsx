@@ -24,7 +24,7 @@ const SKILL_GROUPS = [
   },
 ];
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
   // 從資料庫存取個人個人檔案與履歷經歷

@@ -6,7 +6,7 @@ export const metadata = {
   description: "探索軟體架構重構、工程效能優化與個人思考體系建設。",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function WritingsPage() {
   // 從資料庫讀取所有文章

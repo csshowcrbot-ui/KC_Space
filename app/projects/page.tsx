@@ -6,7 +6,7 @@ export const metadata = {
   description: "精選代表性軟體架構重構、產品落地成果與高併發系統設計案例。",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   // 從資料庫中讀取專案資料

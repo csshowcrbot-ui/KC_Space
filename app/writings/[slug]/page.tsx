@@ -18,14 +18,7 @@ interface ArticlePageProps {
   };
 }
 
-export const revalidate = 60;
-
-export async function generateStaticParams() {
-  const articles = await dataService.getArticles();
-  return articles.map((article) => ({
-    slug: article.slug,
-  }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const article = await dataService.getArticleBySlug(params.slug);

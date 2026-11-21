@@ -5,7 +5,7 @@ import { FeaturedProjects } from "@/components/home/FeaturedProjects";
 import { RecentWritings } from "@/components/home/RecentWritings";
 import { NewsletterBox } from "@/components/shared/NewsletterBox";
 
-export const revalidate = 60; // 邊緣 ISR 快取
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   // 全面從資料庫中存取內容
