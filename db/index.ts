@@ -369,12 +369,18 @@ function readLocalStore(): LocalStoreData {
 }
 
 function writeLocalStore(data: LocalStoreData) {
+  if (isStrictDbMode) {
+    throw new Error(
+      "尚未設定 DATABASE_URL（PostgreSQL 連線字串），無法於生產環境儲存資料，請至 Railway Variables 綁定資料庫。"
+    );
+  }
   try {
     const dir = path.dirname(LOCAL_STORE_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(LOCAL_STORE_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
     console.error("寫入本地資料庫失敗:", err);
+    throw err;
   }
 }
 
@@ -1060,24 +1066,26 @@ export const dataService = {
     const now = new Date();
     if (db) {
       const current = await this.getProfile();
-      const merged = {
-        id: "main",
+      const updateFields = {
         name: input.name ?? current.name,
         title: input.title ?? current.title,
         bio: input.bio ?? current.bio,
         location: input.location ?? current.location,
         email: input.email ?? current.email,
-        avatarUrl: input.avatarUrl !== undefined ? input.avatarUrl : current.avatarUrl ?? null,
+        avatarUrl:
+          input.avatarUrl !== undefined
+            ? input.avatarUrl
+            : current.avatarUrl ?? null,
         nowStatus: input.nowStatus ?? current.nowStatus,
         nowUpdateSeason: input.nowUpdateSeason ?? current.nowUpdateSeason,
         updatedAt: now,
       };
       const rows = await db
         .insert(schema.siteProfiles)
-        .values(merged)
+        .values({ id: "main", ...updateFields })
         .onConflictDoUpdate({
           target: schema.siteProfiles.id,
-          set: merged,
+          set: updateFields,
         })
         .returning();
       const r = rows[0];

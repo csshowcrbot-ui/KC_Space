@@ -6,6 +6,8 @@ import {
   verifyAdminSecret,
 } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const status = await isAdminSecretConfigured();

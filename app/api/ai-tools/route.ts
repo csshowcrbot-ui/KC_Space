@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { dataService } from "@/db";
 import { isAdminRequestAuthorized } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const tools = await dataService.getAiTools();

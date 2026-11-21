@@ -274,12 +274,12 @@ export function AdminDashboard() {
     setLoading(true);
     try {
       const [statsRes, artRes, projRes, aiToolsRes, profRes, expRes] = await Promise.all([
-        fetch("/api/admin/stats").then((r) => r.json()),
-        fetch("/api/articles?all=true").then((r) => r.json()),
-        fetch("/api/projects").then((r) => r.json()),
-        fetch("/api/ai-tools").then((r) => r.json()),
-        fetch("/api/admin/profile").then((r) => r.json()),
-        fetch("/api/admin/experiences").then((r) => r.json()),
+        fetch("/api/admin/stats", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/articles?all=true", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/projects", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/ai-tools", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/admin/profile", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/admin/experiences", { cache: "no-store" }).then((r) => r.json()),
       ]);
 
       if (statsRes.data) setStats(statsRes.data);
@@ -452,11 +452,13 @@ export function AdminDashboard() {
         },
         body: JSON.stringify(profile),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        if (data.data) setProfile(data.data);
         showToast("個人檔案與 /now 現況已更新！");
         loadAllData();
       } else {
-        showToast("更新失敗", "error");
+        showToast(data.error || "更新失敗", "error");
       }
     } catch {
       showToast("連線失敗", "error");
@@ -580,14 +582,24 @@ export function AdminDashboard() {
       {/* 後台頂部 Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               後台管理系統 · Dashboard
             </h1>
+            {stats?.dbMode === "postgresql" && (
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                PostgreSQL 已連線
+              </span>
+            )}
+            {stats?.dbMode === "unconfigured" && (
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                未設定 DATABASE_URL
+              </span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            資料庫直連維護：深度文章、專案成果、關於我與現況看板。
+            資料庫直連維護：深度文章、專案成果、AI 工具、關於我與現況看板。
           </p>
         </div>
 
